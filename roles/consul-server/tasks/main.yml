@@ -1,0 +1,77 @@
+
+
+- debug: var=all_ips
+
+
+- name: Install unzip
+  action: >
+    {{ ansible_pkg_mgr }} name=unzip state=present update_cache=yes
+
+- name: Extract consul into /usr/local/bin
+  become: true
+  unarchive:
+    src: https://releases.hashicorp.com/consul/1.1.0/consul_1.1.0_linux_amd64.zip
+    dest: /usr/local/bin/
+    remote_src: yes
+
+- name: Generate consul key
+  command: consul keygen
+  register: temp_key
+  when: consul_key is undefined
+
+- debug: var=temp_key
+- debug: var=consul_key
+
+- set_fact: consul_key="{{ temp_key }}"
+  when: consul_key is undefined
+
+- debug: var=temp_key
+- debug: var=consul_key
+
+- name: Check that the setkey.sh exists
+  stat:
+    path: ./files/setkey.sh
+  register: stat_result
+
+- name: Create consul encryption key
+  shell: |
+    export KEY=$(consul keygen)
+    echo >/tmp/setkey.sh export KEY="$KEY"
+
+- name: Fetch consul encryption key script
+  fetch:
+    src: /tmp/setkey.sh
+    dest: ./files/setkey.sh
+    flat: yes
+    validate_checksum: no
+    register: setkey
+
+- name: Copy setkey.sh
+  copy:
+    src: ./files/setkey.sh
+    dest: /tmp/consul_setkey.sh
+    owner: consul
+    group: consul
+    mode: 0644
+  loop: "{{ groups['all'] }}"
+
+- name: Remove setkey.sh
+  file:
+    path: /tmp/setkey.sh
+    state: absent
+
+- name: Configure consul
+  shell: |
+    . /tmp/consul_setkey.sh
+    cat >/tmp/consul.cfg <<EOF
+      {
+          "bootstrap": true,
+          "server": true,
+          "datacenter": "nyc2",
+          "data_dir": "/var/consul",
+          "encrypt": "$KEY",{{ consul_key.stdout }}
+          "log_level": "INFO",
+          "bind": "{{ bindto }}",
+          "enable_syslog": true
+      }
+    EOF

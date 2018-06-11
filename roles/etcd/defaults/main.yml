@@ -1,0 +1,21 @@
+---
+# defaults file for ansible-etcd-cluster
+etcd_service: "etcd2.service"
+etcd_dropin_dir: "/etc/systemd/system/{{etcd_service}}.d"
+
+etcd_ca_host: ""
+etcd_ca_depot: ""
+
+etcd_certs_root: "/etc/ssl/etcd"
+local_certs: "certs"
+
+etcd_core_group: ""
+
+etcd_image_url: "quay.io/coreos/etcd"
+etcd_image_tag: "v3.1.0"
+
+etcd_data_dir: "/var/lib/etcd"
+etcd_backup_tag: ""
+etcd_backup_suffix: ""
+
+etcd_ca_setup: ""

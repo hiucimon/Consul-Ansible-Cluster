@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  become: yes
+  command: systemctl daemon-reload
+  notify: Restart etcd
+
+- name: Restart etcd
+  service: name={{etcd_service}} state=restarted
+  become: yes

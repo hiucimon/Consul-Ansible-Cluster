@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: true
+  vars:
+    bindto: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+    first_server: "{{ hostvars['cluster1']['ansible_default_ipv4']['address'] }}"
+    all_ips: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+  roles:
+  - basic
+  - consul-server
+
