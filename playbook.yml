@@ -5,6 +5,9 @@
     bindto: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
     first_server: "{{ hostvars['cluster1']['ansible_default_ipv4']['address'] }}"
     all_ips: "{{ groups['all'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+    leader: "cluster1"
+    config_name: "/etc/consul.cfg"
+    consul_shell: "/usr/local/consul.sh"
   roles:
   - basic
   - consul-server

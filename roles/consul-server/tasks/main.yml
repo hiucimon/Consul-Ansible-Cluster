@@ -2,6 +2,9 @@
 
 - debug: var=all_ips
 
+- name: Kill Consul
+  shell: killall consul
+
 
 - name: Install unzip
   action: >
@@ -21,9 +24,6 @@
 
 - debug: var=temp_key
 - debug: var=consul_key
-
-- set_fact: consul_key="{{ temp_key }}"
-  when: consul_key is undefined
 
 - debug: var=temp_key
 - debug: var=consul_key
@@ -60,18 +60,24 @@
     path: /tmp/setkey.sh
     state: absent
 
+#- template:
+#    src: consul.cfg.j2
+#    dest: "{{ config_name }}"
+#    owner: consul
+#    group: consul
+#    mode: 0644
+
+- template:
+    src: consul.sh.j2
+    dest: "{{ consul_shell }}"
+    owner: consul
+    group: consul
+    mode: 0700
+
 - name: Configure consul
   shell: |
     . /tmp/consul_setkey.sh
-    cat >/tmp/consul.cfg <<EOF
-      {
-          "bootstrap": true,
-          "server": true,
-          "datacenter": "nyc2",
-          "data_dir": "/var/consul",
-          "encrypt": "$KEY",{{ consul_key.stdout }}
-          "log_level": "INFO",
-          "bind": "{{ bindto }}",
-          "enable_syslog": true
-      }
-    EOF
+    sed -i -e "s/CRYPTKEY/$KEY/g" {{ consul_shell }}
+
+- name: Run Consul
+  shell: nohup bash {{ consul_shell }} &
