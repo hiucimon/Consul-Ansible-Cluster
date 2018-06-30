@@ -2,9 +2,19 @@
 
 - debug: var=all_ips
 
-- name: Kill Consul
-  shell: killall consul
+- name: Get running processes
+  shell: "ps -ef | grep -v grep | grep -w consul | awk '{print $2}'"
+  register: running_processes
 
+- name: Kill running processes
+  shell: "kill {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- name: Waiting until all running processes are killed
+  wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
 
 - name: Install unzip
   action: >
@@ -13,7 +23,7 @@
 - name: Extract consul into /usr/local/bin
   become: true
   unarchive:
-    src: https://releases.hashicorp.com/consul/1.1.0/consul_1.1.0_linux_amd64.zip
+    src: https://releases.hashicorp.com/consul/1.2.0/consul_1.2.0_linux_amd64.zip
     dest: /usr/local/bin/
     remote_src: yes
 
