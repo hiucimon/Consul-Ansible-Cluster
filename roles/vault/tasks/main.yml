@@ -1,0 +1,42 @@
+
+- name: Extract consul into /usr/local/bin
+  become: true
+  unarchive:
+    src: https://releases.hashicorp.com/vault/0.10.3/vault_0.10.3_linux_amd64.zip
+    dest: /usr/local/bin/
+    remote_src: yes
+
+- name: Ensure group "vault" exists
+  group:
+    name: vault
+    state: present
+
+- name: Add the user 'vault' with a specific uid and a primary group of 'admin'
+  user:
+    name: vault
+    comment: vault
+    group: vault
+    state: present
+
+- template:
+    src: vault.cfg.j2
+    dest: "/etc/vault.cfg"
+    mode: 0700
+
+- name: Get running processes
+  shell: "ps -ef | grep -v grep | grep -w vault | awk '{print $2}'"
+  register: running_processes
+
+- name: Kill running processes
+  shell: "kill {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- name: Waiting until all running processes are killed
+  wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- name: Run Consul
+  shell: nohup /usr/local/bin/vault server -config=/etc/vault.cfg >/var/log/vault.log 2>&1 &
+  become: true

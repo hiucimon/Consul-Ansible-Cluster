@@ -88,6 +88,7 @@
   shell: |
     . /tmp/consul_setkey.sh
     sed -i -e "s/CRYPTKEY/$KEY/g" {{ consul_shell }}
+  ignore_errors: yes
 
 - name: Run Consul
   shell: nohup bash {{ consul_shell }} &

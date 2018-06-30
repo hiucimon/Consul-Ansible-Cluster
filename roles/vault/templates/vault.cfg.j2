@@ -1,0 +1,19 @@
+
+storage "consul" {
+    address = "{{ bindto }}:8500"
+    path    = "vault"
+}
+
+listener "tcp" {
+    address     = "0.0.0.0:8200"
+    tls_disable = 1
+}
+
+telemetry {
+    statsite_address = "{{ bindto }}:8125"
+    disable_hostname = true
+}
+
+ui = true
+
+

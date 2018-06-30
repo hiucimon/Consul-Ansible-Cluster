@@ -10,7 +10,5 @@
     consul_shell: "/usr/local/consul.sh"
     consul_join: "192.168.86.151"
   roles:
-  - basic
-  - consul-server
   - vault
 
