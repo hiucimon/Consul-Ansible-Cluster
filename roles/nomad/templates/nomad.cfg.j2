@@ -1,0 +1,14 @@
+
+data_dir = "/etc/nomad.d"
+
+server {
+    enabled          = true
+    bootstrap_expect = 3
+}
+
+vault {
+    enabled = true
+    address = "https://localhost:8200"
+    token="d4c72348-1e66-0a72-e5da-355e2cbe6d9d"
+}
+

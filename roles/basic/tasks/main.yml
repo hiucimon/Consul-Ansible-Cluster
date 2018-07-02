@@ -4,6 +4,9 @@
 - name: "Install Base software"
   apt: pkg=libltdl7 state=present
 
+- name: "Install Base software"
+  apt: pkg=ntp state=present
+
 - name: remove docker
   become: true
   apt:

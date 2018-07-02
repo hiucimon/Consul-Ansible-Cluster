@@ -1,0 +1,44 @@
+
+- name: Extract nomad into /usr/local/bin
+  become: true
+  unarchive:
+    src: https://releases.hashicorp.com/nomad/0.8.4/nomad_0.8.4_linux_amd64.zip
+    dest: /usr/local/bin/
+    remote_src: yes
+
+- name: Ensure group "nomad" exists
+  group:
+    name: nomad
+    state: present
+
+- name: Add the user 'nomad'
+  user:
+    name: nomad
+    comment: vault
+    group: nomad
+    state: present
+
+- name: Get running processes
+  shell: "ps -ef | grep -v grep | grep -w nomad | awk '{print $2}'"
+  register: running_processes
+
+- name: Kill running processes
+  shell: "kill {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- name: Waiting until all running processes are killed
+  wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- template:
+    src: nomad.cfg.j2
+    dest: "/etc/nomad.cfg"
+
+- name: Start Nomad
+  shell: "nohup nomad agent -config=/etc/nomad.cfg >/var/log/nomad.log 2>&1 &"
+
+
+
+
